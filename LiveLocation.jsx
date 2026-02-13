@@ -5,7 +5,6 @@ const OFFICE_LOCATION = {
   lng: 112.7735401,
 };
 const MAX_DISTANCE = 150;
-const MIN_DISTANCE_CHANGE = 5; // Minimal perubahan 5 meter baru update
 
 const AttendanceLocation = () => {
   const [location, setLocation] = useState(null);
@@ -15,7 +14,6 @@ const AttendanceLocation = () => {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [isWatching, setIsWatching] = useState(false);
   const watchIdRef = useRef(null);
-  const lastPositionRef = useRef(null);
 
   const getDistanceInMeters = (lat1, lon1, lat2, lon2) => {
     const toRad = (value) => (value * Math.PI) / 180;
@@ -34,26 +32,6 @@ const AttendanceLocation = () => {
   const updateLocation = (position) => {
     const userLat = position.coords.latitude;
     const userLng = position.coords.longitude;
-
-    // Cek apakah ada perubahan posisi signifikan
-    if (lastPositionRef.current) {
-      const positionChange = getDistanceInMeters(
-        lastPositionRef.current.lat,
-        lastPositionRef.current.lng,
-        userLat,
-        userLng
-      );
-
-      // Jika perubahan posisi < 5 meter, skip update
-      if (positionChange < MIN_DISTANCE_CHANGE) {
-        console.log('Position change too small, skipping update:', positionChange.toFixed(2) + 'm');
-        return;
-      }
-    }
-
-    // Update last position
-    lastPositionRef.current = { lat: userLat, lng: userLng };
-
     const dist = getDistanceInMeters(
       userLat,
       userLng,
@@ -73,7 +51,7 @@ const AttendanceLocation = () => {
       setError("You are too far from the office location.");
     }
 
-    console.log('Location updated:', { userLat, userLng, dist: dist.toFixed(2) + 'm' });
+    console.log('Location updated:', { userLat, userLng, dist });
   };
 
   const handleError = (err) => {
@@ -99,7 +77,7 @@ const AttendanceLocation = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 5000, // Cache position selama 5 detik
+        maximumAge: 0,
       }
     );
 
@@ -122,10 +100,7 @@ const AttendanceLocation = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        lastPositionRef.current = null;
-        updateLocation(position);
-      },
+      updateLocation,
       handleError,
       {
         enableHighAccuracy: true,

@@ -99,7 +99,7 @@ const AttendanceLocation = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 5000, // Cache position selama 5 detik
+        maximumAge: 10000, // Cache position selama 10 detik
       }
     );
 
